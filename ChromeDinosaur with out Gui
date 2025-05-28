@@ -31,7 +31,7 @@ public class ChromeDinosaur extends JPanel implements ActionListener , KeyListen
         }
     }
 
-       //dinosaur
+    //dinosaur
     int dinosaurWidth = 88;
     int dinosaurHeight = 94;
     int dinosaurX = 50;
@@ -56,11 +56,12 @@ public class ChromeDinosaur extends JPanel implements ActionListener , KeyListen
 
     boolean gameOver = false;
     int score = 0;
+    int highScore = 0; // ✅ added high score
 
     Timer gameLoop;
     Timer placeCactusTimer;
 
- public ChromeDinosaur() {
+    public ChromeDinosaur() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.lightGray);
         setFocusable(true);
@@ -73,17 +74,12 @@ public class ChromeDinosaur extends JPanel implements ActionListener , KeyListen
         cactus2Img = new ImageIcon(getClass().getResource("./img/cactus2.png")).getImage();
         cactus3Img = new ImageIcon(getClass().getResource("./img/cactus3.png")).getImage();
 
-
-        //dinosaur
         dinosaur = new Block(dinosaurX, dinosaurY, dinosaurWidth, dinosaurHeight, dinosaurImg);
-        //cactus
         cactusArray = new ArrayList<Block>();
 
-        //game timer
         gameLoop = new Timer(1000/60, this);
         gameLoop.start();
 
-        //place cactus Timer
         placeCactusTimer = new Timer(1000, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e){
@@ -91,89 +87,79 @@ public class ChromeDinosaur extends JPanel implements ActionListener , KeyListen
             }
         });
         placeCactusTimer.start();
-
-   }
-
-   void placeCactus(){
-    if(gameOver){
-        return;
     }
 
-    double placeCactusChance = Math.random();
-    if(placeCactusChance > .90){
-        Block cactus = new Block(cactusX, cactusY , cactus3width, cactusHeight, cactus3Img);
-        cactusArray.add(cactus);
-    }
-    else if(placeCactusChance > .70){
-        Block cactus = new Block(cactusX, cactusY, cactus2Width , cactusHeight, cactus2Img);
-        cactusArray.add(cactus);
-    }
-    else if(placeCactusChance > .50){
-        Block cactus = new Block(cactusX, cactusY, cactus1Width, cactusHeight, cactus1Img);
-        cactusArray.add(cactus);
+    void placeCactus(){
+        if(gameOver){
+            return;
+        }
+
+        double placeCactusChance = Math.random();
+        if(placeCactusChance > .90){
+            Block cactus = new Block(cactusX, cactusY , cactus3width, cactusHeight, cactus3Img);
+            cactusArray.add(cactus);
+        }
+        else if(placeCactusChance > .70){
+            Block cactus = new Block(cactusX, cactusY, cactus2Width , cactusHeight, cactus2Img);
+            cactusArray.add(cactus);
+        }
+        else if(placeCactusChance > .50){
+            Block cactus = new Block(cactusX, cactusY, cactus1Width, cactusHeight, cactus1Img);
+            cactusArray.add(cactus);
+        }
     }
 
-   }
-
-   public void paintComponent(Graphics g) {
+    public void paintComponent(Graphics g) {
         super.paintComponent(g);
         draw(g);
     }
 
     public void draw(Graphics g) {
-        //dinosaur
         g.drawImage(dinosaur.img, dinosaur.x, dinosaur.y, dinosaur.width, dinosaur.height, null);
 
-        //cactus
         for(int i = 0; i < cactusArray.size(); i++){
             Block cactus = cactusArray.get(i);
             g.drawImage(cactus.img,cactus.x, cactus.y, cactus.width, cactus.height, null);
         }
 
-        //score
         g.setColor(Color.black);
-        g.setFont(new Font("Courier", Font.PLAIN,32));
-        if(gameOver){
-            g.drawString("Game Over: " + String.valueOf(score), 10, 35);
-
-        }
-        else{
-            g.drawString(String.valueOf(score), 10, 35);
-        }
-  }
-
-  public void move(){
-    //dinosaur
-    velocityY += gravity;  
-    dinosaur.y += velocityY;
-
-    if (dinosaur.y > dinosaurY){
-        dinosaur.y = dinosaurY;
-        velocityY = 0;
-        dinosaur.img = dinosaurImg;
+        g.setFont(new Font("Courier", Font.PLAIN, 32));
+        g.drawString("Score: " + score, 10, 35);
+        g.drawString("High: " + highScore, 600, 35); // ✅ show high score
     }
 
-    //cactus 
-    for(int i = 0; i < cactusArray.size(); i++){
-        Block cactus = cactusArray.get(i);
-        cactus.x += velocityX;
+    public void move(){
+        velocityY += gravity;
+        dinosaur.y += velocityY;
 
-        if(collision(dinosaur , cactus)){
-            gameOver = true;
-            dinosaur.img = dinosaurDeadImg;
+        if (dinosaur.y > dinosaurY){
+            dinosaur.y = dinosaurY;
+            velocityY = 0;
+            dinosaur.img = dinosaurImg;
         }
+
+        for(int i = 0; i < cactusArray.size(); i++){
+            Block cactus = cactusArray.get(i);
+            cactus.x += velocityX;
+
+            if(collision(dinosaur , cactus)){
+                gameOver = true;
+                dinosaur.img = dinosaurDeadImg;
+                if(score > highScore){ // ✅ update high score
+                    highScore = score;
+                }
+            }
+        }
+
+        score++;
     }
 
-    //score
-    score++;
-  }
-
-  boolean collision(Block a, Block b){
-    return a.x < b.x + b.width &&
-           a.x + a.width > b.x &&
-           a.y < b.y + b.height &&
-           a.y + a.height > b.y;
-  }
+    boolean collision(Block a, Block b){
+        return a.x < b.x + b.width &&
+               a.x + a.width > b.x &&
+               a.y < b.y + b.height &&
+               a.y + a.height > b.y;
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -191,15 +177,13 @@ public class ChromeDinosaur extends JPanel implements ActionListener , KeyListen
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE){
-            //System.out.println("JUMP!");
            if(dinosaur.y == dinosaurY){ 
-            velocityY = -17;
-            dinosaur.img = dinosaurJumpImg;
-           }
+                velocityY = -17;
+                dinosaur.img = dinosaurJumpImg;
+            }
         }
-  
     }
 
     @Override
     public void keyReleased(KeyEvent e) {}
- }
+}
